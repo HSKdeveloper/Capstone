@@ -36,6 +36,9 @@ class Rider (models.Model):
     size_car = models.CharField(max_length=64, choices=SizeCarName.choices, default=SizeCarName.M)
     cities = models.ManyToManyField(City)
 
+    def __str__(self):
+        return self.user
+
 class ReviewRider (models.Model):
 
     rider = models.ForeignKey(Rider, on_delete=models.CASCADE)
@@ -44,3 +47,6 @@ class ReviewRider (models.Model):
     comments = models.TextField()
 
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.driver.user} on {self.rider.user}"
