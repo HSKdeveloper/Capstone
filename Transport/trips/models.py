@@ -41,7 +41,7 @@ class JoinTrip (models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
 
-    comment = models.TextField()
+    comment = models.TextField(null=True, blank=True)
     rider_status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
     reject_Comment = models.TextField(null=True, blank=True)
 

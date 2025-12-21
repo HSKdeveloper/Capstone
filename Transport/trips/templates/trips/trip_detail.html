@@ -97,7 +97,7 @@
                                 <i class="fa-solid fa-trash me-1"></i> Delete
                             </button>
                         </form>
-                        {% elif request.user.is_authenticated and request.user.rider %}
+                        {% elif request.user.is_authenticated and request.user.rider and not has_joined %}
                         <button type="button" class="btn btn-warning" data-bs-toggle="modal"
                             data-bs-target="#joinTripModal">
                             <i class="fa-solid fa-plus me-1"></i> Join Trip
@@ -155,68 +155,81 @@
 
     </div>
 
-<!-- Join Requests (Driver Only) -->
-{% if request.user == trip.driver.user %}
-<div class="row g-4 mb-5">
-    <div class="col-12">
-        <div class="card custom-card p-4">
-            <h5 class="section-title"><i class="fa-solid fa-users me-2"></i>Join Requests</h5>
-            {% if join_requests %}
-            <div class="table-responsive">
-                <table class="table align-middle text-center">
-                    <thead>
-                        <tr style="color:#474341;">
-                            <th>User</th>
-                            <th>Start Date</th>
-                            <th>End Date</th>
-                            <th>Notes</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for r in join_requests %}
-                        <tr>
-                            <td class="fw-semibold">{{ r.rider.user.username }}</td>
-                            <td>{{ r.start_date }}</td>
-                            <td>{{ r.end_date }}</td>
-                            <td class="text-muted">{{ r.comment|default:"—" }}</td>
-                            <td>
-                                {% if r.rider_status == 'PENDING' %}
-                                <span class="badge bg-secondary">Pending</span>
-                                {% elif r.rider_status == 'APPROVED' %}
-                                <span class="badge bg-success">Approved</span>
-                                {% elif r.rider_status == 'REJECTED' %}
-                                <span class="badge bg-danger">Rejected</span>
+    <!-- Join Requests (Driver Only) -->
+    {% if request.user == trip.driver.user %}
+    <div class="row g-4 mb-5">
+        <div class="col-12">
+            <div class="card custom-card p-4">
+                <h5 class="section-title"><i class="fa-solid fa-users me-2"></i>Join Requests</h5>
+                {% if join_requests %}
+                <div class="table-responsive">
+                    <table class="table align-middle text-center">
+                        <thead>
+                            <tr style="color:#474341;">
+                                <th>User</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Notes</th>
+                                <th>Status</th>
+                                {% if has_rejected %}
+                                <th>Reject Comment</th>
+                                {%endif%}
+                                {%if not has_rejected%}
+                                <th>Action</th>
                                 {% endif %}
-                            </td>
-                            <td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in join_requests %}
+                            <tr>
+                                <td class="fw-semibold">{{ r.rider.user.username }}</td>
+                                <td>{{ r.start_date }}</td>
+                                <td>{{ r.end_date }}</td>
+
+                                <td class="text-muted">{{ r.comment|default:"—" }}</td>
+
+                                <td>
+                                    {% if r.rider_status == 'PENDING' %}
+                                    <span class="badge bg-secondary">Pending</span>
+                                    {% elif r.rider_status == 'APPROVED' %}
+                                    <span class="badge bg-success">Approved</span>
+                                    {% elif r.rider_status == 'REJECTED' %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                    {% endif %}
+                                </td>
+
+                                {% if r.rider_status == 'REJECTED'%}
+                                <td class="text-muted">{{ r.reject_Comment|default:"—" }}</td>
+                                {%endif%}
                                 {% if r.rider_status == 'PENDING' %}
-                                <form method="POST" action="{% url 'trips:update_request_status_view' r.id %}" class="d-flex gap-2 justify-content-center align-items-center">
-                                    {% csrf_token %}
-                                    <select name="status" class="form-select form-select-sm status-select" style="width:auto;">
-                                        <option value="APPROVED">Accept</option>
-                                        <option value="REJECTED">Reject</option>
-                                    </select>
-                                    <input type="text" name="reject_Comment" class="form-control form-control-sm reject-comment" placeholder="Reason for rejection" style="display:none;">
-                                    <button type="submit" class="btn btn-sm btn-primary fw-bold">Update</button>
-                                </form>
-                                {% else %}
-                                <span class="text-muted">—</span>
+                                <td>
+                                    <form method="POST" action="{% url 'trips:update_request_status_view' r.id %}"
+                                        class="d-flex gap-2 justify-content-center align-items-center">
+                                        {% csrf_token %}
+                                        <select name="status" class="form-select form-select-sm status-select"
+                                            style="width:auto;">
+                                            <option value="APPROVED">Accept</option>
+                                            <option value="REJECTED">Reject</option>
+                                        </select>
+                                        <input type="text" name="reject_comment" class="form-control form-control-sm reject-comment" placeholder="Reason for rejection">
+                                        <button type="submit" class="btn btn-sm btn-primary fw-bold">Update</button>
+                                    </form>
+                                    {% else %}
+                                    <span class="text-muted">—</span>
+                                </td>
                                 {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No join requests yet.</p>
+                {% endif %}
             </div>
-            {% else %}
-            <p class="text-muted mb-0">No join requests yet.</p>
-            {% endif %}
         </div>
     </div>
-</div>
-{% endif %}
+    {% endif %}
 
 
 </div>
@@ -228,10 +241,10 @@
             <form method="POST" action="{% url 'trips:join_trip_view' trip.id %}">
                 {% csrf_token %}
                 <div class="modal-header">
-                    <h5 class="modal-title" id="joinTripModalLabel">Request to Join Trip</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
+                    <h5 class="modal-title mb-3" id="joinTripModalLabel">Request to Join Trip</h5>
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="form-label">Start Date *</label>
@@ -244,14 +257,14 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Notes</label>
-                        <input type="text" name="comment" class="form-control">
+                        <textarea type="text" name="comment" class="form-control"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-warning w-100">
                         <i class="fa-solid fa-plus me-2"></i>Send Request
                     </button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">Cancel</button>
                 </div>
             </form>
         </div>
@@ -275,17 +288,17 @@
 </script>
 
 <script>
-document.querySelectorAll('.status-select').forEach(select => {
-    select.addEventListener('change', function() {
-        const rejectInput = this.closest('form').querySelector('.reject-comment');
-        if (this.value === 'REJECTED') {
-            rejectInput.style.display = 'block';
-        } else {
-            rejectInput.style.display = 'none';
-            rejectInput.value = '';
-        }
+    document.querySelectorAll('.status-select').forEach(select => {
+        select.addEventListener('change', function () {
+            const rejectInput = this.closest('form').querySelector('.reject-comment');
+            if (this.value === 'REJECTED') {
+                rejectInput.style.display = 'block';
+            } else {
+                rejectInput.style.display = 'none';
+                rejectInput.value = '';
+            }
+        });
     });
-});
 </script>
 
 {% endblock %}

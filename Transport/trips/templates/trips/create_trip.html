@@ -2,6 +2,22 @@
 {% load static %}
 
 {% block title %}Create Trip{% endblock %}
+{% block style %}
+<style>
+    
+.chocie-form .form-select {
+
+    border: 2px solid #a3a2a2;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    width: 100%;
+    margin-bottom: 0;
+    background-color: #f8f7f5;
+}
+    
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="auth-page">
@@ -28,11 +44,11 @@
                         {% endfor %}
                         {% endif %}
 
-                        <form method="POST" enctype="multipart/form-data" class="auth-form">
+                        <form method="POST" enctype="multipart/form-data" class="">
                             {% csrf_token %}
 
                             <!-- Trip Schedule -->
-                            <div class="row mb-3">
+                            <div class="row mb-3 auth-form">
                                 <div class="col-md-6">
                                     <label class="form-label">Start Date *</label>
                                     <input type="date" name="start_date" class="form-control" required>
@@ -43,19 +59,19 @@
                                 </div>
                             </div>
 
-                            <div class="row mb-4">
+                            <div class="row mb-4 auth-form">
                                 <div class="col-md-6">
                                     <label class="form-label">Start Time *</label>
                                     <input type="time" name="start_time" class="form-control" required>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-6 auth-form">
                                     <label class="form-label">End Time *</label>
                                     <input type="time" name="end_time" class="form-control" required>
                                 </div>
                             </div>
 
                             <!-- Route Info -->
-                            <div class="mb-3">
+                            <div class="mb-3 auth-form">
                                 <label class="form-label">City *</label>
                                 <select name="city" class="form-select" required>
                                     {% for city in cities %}
@@ -65,10 +81,10 @@
                             </div>
 
 
-                            <div class="mb-3">
-                                <label class="form-label d-block text-end">Start Neighborhood *</label>
+                            <div class="mb-3 ">
+                                <label class="form-label d-block text-end  ">Start Neighborhood *</label>
 
-                                <div class="dropdown w-100 text-start">
+                                <div class="dropdown w-100 text-start chocie-form">
                                     <button class="form-select w-100 text-end" type="button"
                                         data-bs-toggle="dropdown" data-bs-auto-close="outside">
                                         Start Neighborhood
@@ -92,7 +108,7 @@
                             <div class="mb-3">
                                 <label class="form-label d-block text-end">End Neighborhood *</label>
 
-                                <div class="dropdown w-100 text-end">
+                                <div class="dropdown w-100 text-end chocie-form">
                                     <button class="form-select w-100 text-end" type="button"
                                         data-bs-toggle="dropdown" data-bs-auto-close="outside">
                                         End Neighborhood
@@ -116,7 +132,7 @@
                             <div class="mb-3">
                                 <label class="form-label d-block text-end">Days of Week *</label>
 
-                                <div class="dropdown w-100 text-end">
+                                <div class="dropdown w-100 text-end chocie-form">
                                     <button class="form-select w-100 text-end" type="button"
                                         data-bs-toggle="dropdown" data-bs-auto-close="outside">
                                         Days of Week
@@ -137,7 +153,7 @@
                             </div>
 
                             <!-- Seats & Price -->
-                            <div class="row mb-3">
+                            <div class="row mb-3 auth-form">
                                 <div class="col-md-6">
                                     <label class="form-label">Total Riders *</label>
                                     <input type="number" name="total_riders" min="1" class="form-control" required>
@@ -173,45 +189,6 @@
         </div>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-
-    const dropdowns = document.querySelectorAll('.dropdown');
-
-    console.log("Dropdowns found:", dropdowns.length);
-
-    dropdowns.forEach(dropdown => {
-
-        const button = dropdown.querySelector('button');
-        const checkboxes = dropdown.querySelectorAll('input[type="checkbox"]');
-
-        console.log("Checkboxes:", checkboxes.length);
-
-        const placeholder = button.textContent.trim();
-
-        function updateButtonText() {
-            const selected = [];
-
-            checkboxes.forEach(cb => {
-                if (cb.checked) {
-                    const text = cb.closest('label').querySelector('span').textContent.trim();
-                    selected.push(text);
-                }
-            });
-
-            button.textContent = selected.length > 0
-                ? selected.join('، ')
-                : placeholder;
-        }
-
-        checkboxes.forEach(cb => {
-            cb.addEventListener('change', updateButtonText);
-        });
-    });
-
-});
-</script>
 
 
 {% endblock %}

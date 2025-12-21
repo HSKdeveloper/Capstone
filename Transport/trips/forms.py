@@ -18,4 +18,11 @@ class JoinTripForm(forms.ModelForm):
              'start_date', 'end_date', 'comment'
         ]
 
+class StatusJoinForm(forms.ModelForm):
+    class Meta:
+        model = JoinTrip
+        fields = [
+             'rider_status', 'reject_Comment'
+        ]
+
        

@@ -10,49 +10,66 @@ from .forms import TripForm, JoinTripForm
 from main.models import City, Neighborhood, Day
 from django.db.models import Q
 # Create your views here.
-def all_trip_view(request:HttpRequest):
-    trips =Trip.objects.filter(admin_status='APPROVED')
-    if request.user.is_authenticated:
-        try:
-            rider = request.user.rider
-            ride_city = request.user.rider.city
-            trips =Trip.objects.filter(city=ride_city)# يطلع الرحلات على حسب مدينة الراكب
-        except AttributeError:
-            pass
 
-        search = request.GET.get('search')
-        if search:
-            trips = trips.filter(
-                Q(start_neighborhood__name__icontains=search) |
+
+
+def all_trip_view(request: HttpRequest):
+    # الرحلات المعتمدة فقط
+    trips = Trip.objects.filter(admin_status='APPROVED')
+
+    # فلترة حسب مدينة الراكب
+    if request.user.is_authenticated:
+        rider = Rider.objects.filter(user=request.user).first()
+        if rider and rider.city:
+            trips = trips.filter(city=rider.city)
+
+    # البحث
+    search = request.GET.get('search')
+    if search:
+        trips = trips.filter(
+            Q(start_neighborhood__name__icontains=search) |
             Q(end_neighborhood__name__icontains=search)
-            )
+        )
+
+    # فلترة حي البداية
     start_neighborhood_ids = request.GET.getlist('start_neighborhood')
     if start_neighborhood_ids:
         trips = trips.filter(start_neighborhood__id__in=start_neighborhood_ids)
 
-
+    # فلترة حي النهاية
     end_neighborhood_ids = request.GET.getlist('end_neighborhood')
     if end_neighborhood_ids:
         trips = trips.filter(end_neighborhood__id__in=end_neighborhood_ids)
-       
-        start_date = request.GET.get('start_date')
-        if start_date:
-            trips= trips.filter(start_date__gte=start_date)
 
-        end_date = request.GET.get('end_date')
-        if end_date:
-            trips= trips.filter(end_date__lte=end_date)
-        
-        trips = trips.distinct()
- 
+    # فلترة التاريخ
+    start_date = request.GET.get('start_date')
+    if start_date:
+        trips = trips.filter(start_date__gte=start_date)
+
+    end_date = request.GET.get('end_date')
+    if end_date:
+        trips = trips.filter(end_date__lte=end_date)
+
+    # منع التكرار
+    trips = trips.distinct()
+
     print("GET DATA:", request.GET)
 
-    return render(request, 'trips/trips_list.html',{'trips':trips})
+    return render(request, 'trips/trips_list.html', {'trips': trips})
 
 
 def trip_detail_view(request:HttpRequest, trip_id):
     trip = get_object_or_404(Trip, id=trip_id, admin_status='APPROVED')
     join_requests = JoinTrip.objects.filter(trip=trip)
+    has_rejected = join_requests.filter(rider_status='REJECTED').exists()
+
+    has_joined = False
+    if request.user.is_authenticated:
+        try:
+            rider = request.user.rider
+            has_joined = JoinTrip.objects.filter(trip=trip, rider=rider).exists()
+        except Rider.DoesNotExist:
+            has_joined = False
 
     driver = trip.driver
     car = driver.car
@@ -61,7 +78,9 @@ def trip_detail_view(request:HttpRequest, trip_id):
         'trip':trip,
         'driver':driver,
         'car': car,
-        'join_requests':join_requests
+        'join_requests':join_requests,
+        'has_rejected':has_rejected,
+        'has_joined':has_joined
     }
     return render(request, 'trips/trip_detail.html',context)
 
@@ -158,7 +177,7 @@ def join_trip_view(request:HttpRequest, trip_id):
 
 
     trip = get_object_or_404(Trip, id= trip_id)
-
+    
     if JoinTrip.objects.filter(trip=trip, rider= rider).exists():
         messages.warning(request, "You have already requested to join this trip.","alert-warning")
         return redirect('trips:trip_detail_view', trip_id=trip.id)
