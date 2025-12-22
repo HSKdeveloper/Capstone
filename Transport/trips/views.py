@@ -1,9 +1,11 @@
+from datetime import timezone
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest
 
 from .models import Trip ,JoinTrip
+from trip_subscription.models import TripSubscription
 from drivers.models import Driver
 from riders.models import Rider
 from .forms import TripForm, JoinTripForm
@@ -64,9 +66,11 @@ def trip_detail_view(request:HttpRequest, trip_id):
     has_rejected = join_requests.filter(rider_status='REJECTED').exists()
 
     has_joined = False
+    join_trip= None
     if request.user.is_authenticated:
         try:
             rider = request.user.rider
+            join_trip = JoinTrip.objects.filter(trip=trip, rider=rider).first()
             has_joined = JoinTrip.objects.filter(trip=trip, rider=rider).exists()
         except Rider.DoesNotExist:
             has_joined = False
@@ -74,13 +78,24 @@ def trip_detail_view(request:HttpRequest, trip_id):
     driver = trip.driver
     car = driver.car
 
+    all_subscriptions = TripSubscription.objects.filter(
+        join_trip__trip=trip,
+        join_trip__rider_status='APPROVED',
+        join_trip__end_date__gte=timezone.now().date)
+
+    # المشتركين للعرض فقط
+    subscribers = all_subscriptions.select_related("rider")[:4]
+    total_subscribers = all_subscriptions.count()
     context = {
         'trip':trip,
         'driver':driver,
         'car': car,
         'join_requests':join_requests,
         'has_rejected':has_rejected,
-        'has_joined':has_joined
+        'has_joined':has_joined,
+        'join_trip':join_trip,
+        'subscribers':subscribers,
+        'total_subscribers':total_subscribers,
     }
     return render(request, 'trips/trip_detail.html',context)
 
