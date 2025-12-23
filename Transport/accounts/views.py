@@ -194,7 +194,10 @@ def sign_up_driver(request: HttpRequest):
 
     # GET request
     form = DriverForm()
-    return _render_driver_signup(request, form)
+    cities = City.objects.all()
+    nationalities = Nationality.objects.all()
+    return render(request, 'accounts/signup_driver.html', { 'form': form, 'cities': cities, 'nationalities': nationalities })
+
 
 
 
