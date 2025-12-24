@@ -37,10 +37,7 @@
 }
 
     .tp-shell {
-        background: radial-gradient(circle at top left,
-                rgba(242, 194, 53, 0.45),
-                rgba(242, 194, 53, 0.18),
-                rgba(255, 255, 255, 0.9));
+        background: #fff;
         border-radius: 24px;
         padding: 1px;
     }

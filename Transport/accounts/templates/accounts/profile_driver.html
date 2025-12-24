@@ -4,11 +4,11 @@
 {% block title %}Driver Profile{% endblock %}
 
 {% block style %}
-
-{% endblock %}
-
-{% block content %}
 <style>
+    .tp-profile-page  .tp-shell
+    {
+        background: #fff;
+    }
     .profile-hero-minimal {
         background: linear-gradient(135deg, #e3e8f7 0%, #c5cae9 100%);
         border-radius: 28px;
@@ -72,6 +72,10 @@
     }
     .profile-info-row i { margin-right: 8px; color: #3949ab; font-size: 1.2em; }
 </style>
+{% endblock %}
+
+{% block content %}
+
 {% if request.user == driver.user %}
 {% include "drivers/component/driver_owner.html" %}
 {%endif%}
