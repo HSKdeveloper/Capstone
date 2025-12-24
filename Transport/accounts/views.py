@@ -16,6 +16,8 @@ from rider_request.models import RiderRequest
 from django.contrib.auth.decorators import login_required
 from django.db import transaction  
 from django.utils.http import url_has_allowed_host_and_scheme  
+from django.contrib import messages
+
 from datetime import date
 from django.db.models import Count, Q
 
@@ -333,6 +335,9 @@ def profile_rider(request: HttpRequest, rider_id=None):
             jt.show_payment_button = False
 
     has_rejected = joined_trips.filter(rider_status='REJECTED').exists()
+    if has_rejected:
+        messages.warning(request, "Attention: You have rejected join requests. Please check the details in your joined trips list.")
+    
 
     context = {'rider': rider,'joined_trips':joined_trips,'has_rejected':has_rejected, 'subscriptions':subscriptions, 'joined_trips':joined_trips,'req_trips':req_trips ,'req_subscriptions':req_subscriptions}
     return render(request, 'accounts/profile_rider.html', context)
