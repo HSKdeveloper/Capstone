@@ -17,6 +17,7 @@ from django.contrib.auth.decorators import login_required
 from django.db import transaction  
 from django.utils.http import url_has_allowed_host_and_scheme  
 from django.contrib import messages
+from django.utils import timezone
 
 from datetime import date
 from django.db.models import Count, Q
@@ -270,7 +271,9 @@ def profile_driver(request: HttpRequest, driver_id=None):
     ).order_by('-created_at')
 
     accepted_rider_req = RiderRequest.objects.filter(driver=driver, status=RiderRequest.Status.A)
-    return render(request, 'accounts/profile_driver.html', {'driver': driver, 'car': car, 'trips': trips,'subscriptions':subscriptions, 'accepted_rider_req':accepted_rider_req})
+    expired_trips_exists = driver.trips.filter(end_date__lt=timezone.now().date()).exists()
+
+    return render(request, 'accounts/profile_driver.html', {'driver': driver, 'car': car, 'trips': trips,'subscriptions':subscriptions, 'accepted_rider_req':accepted_rider_req, 'expired_trips_exists': expired_trips_exists})
 
 
 @login_required
@@ -345,9 +348,7 @@ def profile_rider(request: HttpRequest, rider_id=None):
             jt.show_payment_button = False
 
     has_rejected = joined_trips.filter(rider_status='REJECTED').exists()
-    if has_rejected:
-        messages.warning(request, "Attention: You have rejected join requests. Please check the details in your joined trips list.")
-    
+  
 
     context = {'rider': rider,'joined_trips':joined_trips,'has_rejected':has_rejected, 'subscriptions':subscriptions, 'joined_trips':joined_trips,'req_trips':req_trips ,'req_subscriptions':req_subscriptions}
     return render(request, 'accounts/profile_rider.html', context)
